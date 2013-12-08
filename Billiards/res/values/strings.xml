@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Billiards</string>
+    <string name="action_settings">Settings</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="more">Speed up</string>
+    <string name="less">Slow down</string>
+    <string name="clear">Clear all balls</string>
+    <color name="black">#000000</color>
+
+</resources>
