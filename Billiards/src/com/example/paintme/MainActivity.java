@@ -36,12 +36,12 @@ public class MainActivity extends Activity {
 //			Log.i("MAIN", "clicked");
 			clear = true;
 		}
-		else if(item.getItemId() == R.id.speed_down){
-			mK = -1;
-		}
-		else if(item.getItemId() == R.id.speed_up){
-			mK = 1;
-		}
+//		else if(item.getItemId() == R.id.speed_down){
+//			mK = -1;
+//		}
+//		else if(item.getItemId() == R.id.speed_up){
+//			mK = 1;
+//		}
 	  return false;
 	}
 

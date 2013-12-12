@@ -24,27 +24,107 @@ public class DrawView extends View implements OnGestureListener {
 
 	public static final String TAG = "DrawView"; 
 	
-	
-	public class PoolBall {
+	public class GameObject {
+		protected float velocityX, velocityY, velocityZ;
+		private float startX, stopX;
+		private float startY, stopY;
+		private float startZ, stopZ;
+		protected float centerX, centerY, centerZ;
+		private float length;
 		
-		private float centerX;
-		private float centerY;
-		private float velocityX;
-		private float velocityY;
 		
-		public PoolBall(float xCoord, float yCoord){
-			centerX = xCoord;
-			Log.i("coord", "x is "+xCoord);
-			centerY = yCoord;
-			Log.i("coord", "y is "+yCoord);
+		public GameObject(){
 			
 		}
 		
-		public PoolBall(){
+		public GameObject (float mstartX, float mstartY, float mstopX, float mstopY){
+
+			startX = mstartX;
+			startY = mstartY;
+			stopX = mstopX;
+			stopY = mstopY;
+		}
+		
+		public GameObject(int radius){
+			
+		}
+		
+		public float getVelocityX(){
+			return velocityX;
+		}
+		
+		public float getVelocityY(){
+			return velocityY;
+		}
+		
+		public float getVelocityZ(){
+			return velocityZ;
+		}
+		
+	    public float getStartX(){
+	    	return startX;
+	    }
+	    
+	    public float getStopX(){
+	    	return stopX;
+	    }
+	    
+	    public float getStartY(){
+	    	return startY;
+	    }
+	    
+	    public float getStopY(){
+	    	return stopY;
+	    }
+	    
+	    public void setLength(float mLength){
+	    	length = mLength;
+	    }
+	    
+	    public float getLength(){
+	    	return length;
+	    }
+	    
+	    public void drawBoard(Canvas mCanvas){
+			mCanvas.drawLine(startX,startY,stopX,stopY,fgColor);
+		}
+	    
+//	    public void drawBall(Canvas mCanvas){
+//			mCanvas.drawCircle(centerX, centerY, radius, fgColor);
+//		}
+	}
+	
+	public class Rim extends GameObject {
+
+		public Rim (float mstartX, float mstartY, float mstopX, float mstopY){
+			super(mstartX, mstartY, mstopX, mstopY);
+		}
+
+	}
+	
+	public class Backboard extends GameObject{
+
+		public Backboard (float mstartX, float mstartY, float mstopX, float mstopY){
+			super(mstartX, mstartY, mstopX, mstopY);
+			centerY = mstartY;
+		}
+		
+		public float getCenterY(){
+			return centerY;
+		}
+	}
+	
+	
+	public class BBall extends GameObject{
+
+		private int radius = 25;
+		
+		public BBall(){
+			super();
 		}
 		
 		public void drawBall(Canvas mCanvas){
-			mCanvas.drawCircle(centerX, centerY, 25, fgColor);
+			mCanvas.drawCircle(centerX, centerY, radius, fgColor);
 		}
 		
 		public void setX(float x){
@@ -65,17 +145,20 @@ public class DrawView extends View implements OnGestureListener {
 			velocityY = y;
 		}
 		
-//		public void setSelected(boolean selected){
-//			isSelected = selected;
-//		}
-		
 		public float updateX(){
-			float newX = ((float)0.01*velocityX*k) + centerX;
+			float newX;
+			if(thrown){
+				newX = ((float)0.01*velocityX) + centerX + (0.5f*gravity*timeInterval*timeInterval);
+			}
+			else{
+				newX = ((float)0.01*velocityX) + centerX;
+			}
+			
 			return newX;
 		}
 		
 		public float updateY(){
-			float newY = ((float)0.01*velocityY*k) + centerY;
+			float newY = ((float)0.01*velocityY) + centerY;
 			return newY;
 		}
 		
@@ -113,41 +196,80 @@ public class DrawView extends View implements OnGestureListener {
 		
 		public void update(Canvas canvas){
 
+			//Get the the position that the ball will be updated to - we use this to determine
+			// if the ball is going to collide with anything.
 			float updatedX = updateX();
 
 			float updatedY = updateY();
 			
+			/*
+			 * First check if the updated position of the ball would put it out of the bounds 
+			 * of the court.  If it does, the velocities are adjusted accordingly in the
+			 * 'else' statement.
+			 * If the updated position would be in the court, first check if it collides with
+			 * the backboard.  If it does, adjust the velocity accordingly, then adjusted the 
+			 * updated position using the new velocity.  Do the same for the rim.  The logic 
+			 * to see if a basket is made is in the logic for the rim.
+			 */
+
+			
+			//case where ball is within the court
 			if((updatedX > 10 && updatedX < (WIDTH_BOUND - 10)) && (updatedY > 10 && updatedY < (HEIGHT_BOUND - 10))){
-				if(findBallSpecific((updatedX - 35), (updatedX + 35),(updatedY - 35), (updatedY + 35), (velocityX/2), (velocityY/2))){
-					setVelocityX((-velocityX/2));
-					setVelocityY((-velocityY/2));
+				
+				//check for collision with backboard
+					if(updatedY < (mBackboard.getCenterY() + radius)){
+						if((updatedX > (mBackboard.getStartX() - radius)) && (updatedX < (mBackboard.getStopX() + radius))){
+							setVelocityY(-velocityY/2);
+							updatedY = updateY();
+						}
+					}
+				
+				//check for collision with rim or basket
+				if(mRim != null){
+					if(updatedX > mRim.getStartX()){
+						//if you've made a basket, stop the ball
+						if((updatedY > (mRim.getStartY() + radius/2)) && updatedY < mRim.getStopY()){
+							setVelocityY(0);
+							setVelocityX(0);
+							updatedY = updateY();
+							updatedX = updateX();
+						}
+					}
+					// else just collide and bounce off
+					else if(updatedX == mRim.getStartX()){
+						setVelocityY(-velocityY/2);
+						updatedY = updateY();
+					}
 				}
+				
 				setX(updatedX);
 				setY(updatedY);
 				updateVelX();
 				updateVelY();
 			} 
 			else{
-				if(updatedX < 10){
+				//the cases represented are in the 'Log' statements
+				if(updatedX < radius){
 					setVelocityX(-velocityX);
 					Log.i(TAG, "x less than min");
 				}
-				if(updatedX > (WIDTH_BOUND - 10)){
+				if(updatedX > (WIDTH_BOUND - radius)){
 					setVelocityX(-velocityX);
 					Log.i(TAG, "x greater than max");
 
 				}
-				if(updatedY < 10){
+				if(updatedY < radius){
 					setVelocityY(-velocityY);
 					Log.i(TAG, "y less than min");
 
 				}
-				if(updatedY > (HEIGHT_BOUND - 10)){
+				if(updatedY > (HEIGHT_BOUND - radius)){
 					setVelocityY(-velocityY);
 					Log.i(TAG, "y greater than max");
 
 				}
 				
+				// in this clause, at least one velocity has changed, so update position
 				updatedX = updateX();
 				updatedY = updateY();
 				updateVelX();
@@ -164,49 +286,41 @@ public class DrawView extends View implements OnGestureListener {
 	
 	private PointF m1, m2;
 	private GestureDetector gd; 
-	
-	public Button up;
-	
-	Integer k = 2;
+
+
+	// this is a friction coefficient so the ball will stop moving eventually
+	//may not be needed after initial testing
 	Integer kA = 20;
 	
-	PoolBall mBall = null;
-	ArrayList<PoolBall> billiards = new ArrayList<PoolBall>();
+	BBall mBall = null;
+	Backboard mBackboard = new Backboard(150.0f, 200.0f, 400.0f, 200.0f);
+	Rim mRim = new Rim(275f, 200f, 275f, 275f);
+
+	
 	boolean mTimeOn = false;
 	Integer WIDTH_BOUND;
 	Integer HEIGHT_BOUND;
 	
+	float gravity = 9.8f;
+	float timeInterval = 2f;
+	boolean thrown = false;
+	
+	/*
+	 * This function is used to determine if the user's finger was anywhere near
+	 * the ball when they did a fling.
+	 */
 	public boolean findBall(float xLess,float xMore, float velocityX, float velocityY){
 
-		for(int i = 0; i < billiards.size(); i++){
-			mBall = billiards.get(i);
 			if(mBall.centerX <= xMore && mBall.centerX >= xLess){
 				Log.i(TAG, "ball in motion");
 				mBall.setVelocityX(velocityX);
 				mBall.setVelocityY(velocityY);
 				return true;
 			}
-			
-		}
+
 		return false;
 	}
 	
-	public boolean findBallSpecific(float xLess,float xMore,float yLess, float yMore, float velocityX, float velocityY){
-
-		for(int i = 0; i < billiards.size(); i++){
-			mBall = billiards.get(i);
-			if((mBall.centerX <= xMore && mBall.centerX >= xLess)&&(mBall.centerY <= yMore && mBall.centerY >= yLess)){
-//				if(mBall.centerY <= yMore && mBall.centerY >= yLess){
-				Log.i(TAG, "ball in motion");
-				mBall.setVelocityX(velocityX);
-				mBall.setVelocityY(velocityY);
-				return true;
-//				}
-			}
-			
-		}
-		return false;
-	}
 
 	
 	public DrawView(Context context) {
@@ -228,6 +342,7 @@ public class DrawView extends View implements OnGestureListener {
 
 	}
 	
+	//start updating the UI once the game begins
 	public boolean onTouchEvent(MotionEvent event) {
 		
 		if (mTimeOn == false) {
@@ -235,11 +350,8 @@ public class DrawView extends View implements OnGestureListener {
 			mTimeOn = true;
 		}
 
-
-		
 		return gd.onTouchEvent(event);  
-		
-		
+
 	}
 	
 	UIUpdater mUIUpdater = new UIUpdater(new Runnable() {
@@ -255,42 +367,25 @@ public class DrawView extends View implements OnGestureListener {
 		canvas.drawPaint(bgColor);
 		WIDTH_BOUND = canvas.getWidth();
 		HEIGHT_BOUND = canvas.getHeight();
-		
-		canvas.drawLine(213.0f, 314.0f, 442.0f, 314.0f, fgColor);
 
 		Paint p = new Paint();
 		p.setColor(Color.CYAN);
 		
 		if(MainActivity.clear){
-			billiards.clear();
+			mBall = null;
 			MainActivity.clear = false;
 			Log.i(TAG, "clear");
 		}
 		
-		if(MainActivity.mK > 0){
-			k++;
-			MainActivity.mK = 0;
-		}
+		mBackboard.drawBoard(canvas);
+		mRim.drawBoard(canvas);
 		
-		if(MainActivity.mK < 0){
-			k--;
-			MainActivity.mK = 0;
-		}
-		
-		
-		for(int i = 0; i < billiards.size(); i++){
-		
-		mBall = billiards.get(i);
 		if (mBall!= null) {
 			p.setColor(Color.BLACK);
 
 			mBall.drawBall(canvas);
 			mBall.update(canvas);
-
-		
 		}
-		}
-
 		
 	}
 
@@ -303,25 +398,37 @@ public class DrawView extends View implements OnGestureListener {
 	@Override
 	public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
 			float velocityY) {
-		if(billiards.size() > 0){
+		
+		if(mBall != null){
 		m1 = new PointF(e1.getX()-25, e1.getY()-25); 
 		m2 = new PointF(e1.getX()+25, e1.getY()+25);
+		// check to see if the fling event occurred near the ball
 		findBall(m1.x,m2.x, velocityX, velocityY);
+		
 		}
-
+		
+		if(!thrown){
+			thrown = true;
+		}
+		
 		return true;
 	}
 
 	@Override
 	public void onLongPress(MotionEvent e) {
-		Log.i(TAG, "long press: (" + e.getX() + "," + e.getY() + ")");
-		Log.i(TAG, mBall+"");
-		m1 = new PointF(e.getX()-10, e.getY()-10); 
-		m2 = new PointF(e.getX()+10, e.getY()+10); 
-		billiards.add(new PoolBall());
-		int index = billiards.size()-1;
-		billiards.get(index).setX(e.getX());
-		billiards.get(index).setY(e.getY());
+		/*
+		 * If there is no ball, create a new Ball object, set the x and y
+		 * coordinates for the center, and make sure that the thrown variable is false
+		 * so that gravity doesn't turn on yet.  Gravity should not be on until the
+		 * first onFling event near the ball.
+		 */
+		if(mBall == null){
+			mBall = new BBall();
+			mBall.setX(e.getX());
+			mBall.setY(e.getY());
+			thrown = false;
+		}
+
 		invalidate(); 
 	}
 
@@ -339,7 +446,6 @@ public class DrawView extends View implements OnGestureListener {
 
 	@Override
 	public boolean onSingleTapUp(MotionEvent e) {
-		
 		return true;
 	}
 	
