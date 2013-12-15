@@ -100,6 +100,7 @@ public class Ball extends GameObject{
 		}
 	}
 	
+	
 	public void update(float stepScale){
 
 		//Get the the position that the ball will be updated to - we use this to determine
