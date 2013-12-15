@@ -8,6 +8,7 @@ public class GameObject {
 	public float z = 0;
 	public float velX = 0;
 	public float velY = 0;
+	public float velZ = 0;
 	public float scaleX = 1;
 	public float scaleY = 1;
 	public float scaleZ = 1;
