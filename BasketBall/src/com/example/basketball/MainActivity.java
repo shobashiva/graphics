@@ -2,11 +2,12 @@ package com.example.basketball;
 
 import java.util.ArrayList;
 
+import android.hardware.SensorEventListener;
 import android.os.Bundle;
 import android.app.Activity;
 import android.view.Menu;
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity/* implements SensorEventListener*/{
 
 	SurfaceView mGLView;
 	
@@ -38,9 +39,9 @@ public class MainActivity extends Activity {
 		backboard.scale(0.1f, 3.5f, 6f);
 		backboard.moveTo(15.1f, 13f, 0f);
 		
-//		GameObject rim = new GameObject(GameObject.Type.Plank);
+		GameObject rim = new GameObject(GameObject.Type.Ball);
 //		rim.scale(1f, 0.1f, 1f);
-		GameObject rim = new Rim();
+//		GameObject rim = new Rim();
 		rim.scale(1.6f, 0.1f, 1.6f);
 		rim.moveTo(14.5f, 10f, 0f);
 		

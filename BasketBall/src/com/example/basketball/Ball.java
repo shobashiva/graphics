@@ -23,6 +23,35 @@ public class Ball extends GameObject{
 		mRimRef = rim;
 	}
 	
+	public boolean inZBound(GameObject mObj, float updated, float padding){
+		boolean inBounds = false;
+//		Log.e("mZ", ""+updated);
+		if(updated <  (mObj.boundStopZ() + padding)){
+//			Log.e("mZ", "Z lt");
+			if(updated > mObj.boundStartZ() - padding){
+//				Log.e("mZ", "Z gt");
+				inBounds = true;
+			}
+		}
+		return inBounds;
+	}
+	
+	public boolean inYBound(GameObject mObj, float updated, float padding){
+		boolean inBounds = false;
+		if(updated <  (mObj.boundStopY() + padding)){
+			if(updated > mObj.boundStartY() + 0.5f){
+//				Log.e("mY", "Y gt");
+				inBounds = true;
+			}
+		}
+		return inBounds;
+	}
+	
+	public void collision(GameObject mObj){
+		
+	}
+
+	
 	public float updateY(float stepScale){
 		float nextY = y + stepScale*(velY);
 		if(nextY < floorBound) {
@@ -107,36 +136,34 @@ public class Ball extends GameObject{
 		// if the ball is going to collide with anything.
 		float updatedX = updateX(stepScale);
 		float updatedY = updateY(stepScale);
+		float updatedZ = updateZ(stepScale);
+
 		float addRadX = updatedX + radius;
-		float addRadY = updatedY + radius;
-		
+//		float addRadY = updatedY + radius;
+
 		// check if past rim
 		// check if above rim
 		// check if before backboard
 		//check for collision with backboard
 		//if up to the backboard and within the y bounds 
 		//8f makes the bounds work
-		
+
 		if(addRadX > mRimRef.boundStartX()){
-			if(addRadY > mRimRef.boundStartY()){
-				if(updatedY < mBackboardRef.boundStartX()){
-					Log.e("basket", "basket!!");
+			if(inZBound(mRimRef, updatedZ, 0.8f)){
+				if(inYBound(mRimRef, updatedY, 0.1f)){
+					Log.e("basket", "basket");
 				}
-				
+				else if(updatedY > mRimRef.boundStartY()){
+					//collision with rim
+					velX = (velX + mRimRef.velX)/2;
+					updatedX = updateX(stepScale);
+				}
 			}
-			else if(updatedY > mRimRef.boundStartY()){
-				//collision with rim
-//				Log.e("collision", "hit");
-				velX = (velX + mRimRef.velX)/2;
-				updatedX = updateX(stepScale);
-				
-			}
-				
+			
 			//collision with backboard	
 			if(addRadX > (mBackboardRef.boundStartX())){
-				if((addRadY > mBackboardRef.boundStartY())){
-					if(addRadY < mBackboardRef.boundStopY() + 8f){
-	//					Log.e("collision", "hit");
+				if(inYBound(mBackboardRef, updatedY, 8f)){
+					if(inZBound(mBackboardRef, updatedZ, 5f)){
 						velX = (velX + mBackboardRef.velX)/2;
 						updatedX = updateX(stepScale);
 					}
@@ -144,12 +171,14 @@ public class Ball extends GameObject{
 			}
 		}
 
-			x = updatedX;
-			y = updatedY;
-			updateVelX();
-			updateVelY(stepScale);
+		x = updatedX;
+		y = updatedY;
+		z = updatedZ;
+		updateVelX();
+		updateVelZ();
+		updateVelY(stepScale);
 
-		
+
 	}
 		
 }

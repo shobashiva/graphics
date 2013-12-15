@@ -84,6 +84,8 @@ public class SurfaceView extends GLSurfaceView implements GestureDetector.OnGest
 		// using magnitude of fling
 		mBallRef.velX = (float) -(Math.cos(angleRadians) * magnitude);
 		mBallRef.velY = (float) (Math.sin(angleRadians) * magnitude);
+//		mBallRef.velZ = 1f;
+		Log.e("velocity", ""+mBallRef.velX);
 		return true;
 	}
 
